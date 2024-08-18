@@ -1,6 +1,9 @@
 package br.com.victorgabrielfs.services;
 
+import br.com.victorgabrielfs.exceptions.ResourceNotFoundException;
 import br.com.victorgabrielfs.models.Person;
+import br.com.victorgabrielfs.repositories.PersonRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,42 +16,39 @@ public class PersonServices {
     private final AtomicLong counter = new AtomicLong();
     private final Logger logger = Logger.getLogger(PersonServices.class.getName());
 
+    @Autowired
+    PersonRepository repository;
+
     public Person create(Person person){
         logger.info("Creating person");
-        return person;
+        return repository.save(person);
     }
 
     public Person update(Person person){
         logger.info("Updating person");
-        return person;
+        var entity = repository.findById(person.getId())
+                .orElseThrow(ResourceNotFoundException::new);
+        entity.setFirstName(person.getFirstName());
+        entity.setLastName(person.getLastName());
+        entity.setAddress(person.getAddress());
+        entity.setGender(person.getGender());
+        return repository.save(entity);
     }
 
-    public void delete(String id){
+    public void delete(Long id){
         logger.info("Deleting person");
+        repository.delete(repository.findById(id).orElseThrow(ResourceNotFoundException::new));
     }
 
     public List<Person> findAll(){
-        List<Person> persons = new ArrayList<>();
+
         logger.info("Finding all people");
-        for (int i = 0; i < 8 ; i++){
-            Person person = new Person();
-            person.setId(counter.incrementAndGet());
-            person.setFirstName("Victor");
-            person.setLastName("Gabriel");
-            person.setAddress("Aguas");
-            person.setGender("Male");
-            persons.add(person);
-        }
-        return persons;
+
+        return repository.findAll();
     }
-    public Person findById(String id){
+    public Person findById(Long id){
         logger.info("Finding person");
-        Person person = new Person();
-        person.setId(counter.incrementAndGet());
-        person.setFirstName("Victor");
-        person.setLastName("Gabriel");
-        person.setAddress("Aguas");
-        person.setGender("Male");
-        return person;
+        return repository.findById(id)
+                .orElseThrow(ResourceNotFoundException::new);
     }
 }
